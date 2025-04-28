@@ -1,5 +1,6 @@
 import pandas as pd
 import ta
+import ta.trend
 
 def calculate_rsi(data, window=14) -> pd.DataFrame:
     df = pd.DataFrame(data, columns=[
@@ -52,5 +53,18 @@ def calculate_sma(data, window=14) -> pd.DataFrame:
     df['close'] = df['close'].astype(float)
 
     df['sma'] = ta.trend.SMAIndicator(close=df['close'], window=window).sma_indicator()
+
+    return df
+
+def calculate_macd(data) -> pd.DataFrame:
+    df = pd.DataFrame(data, columns=[
+        "timestamp", "open", "high", "low", "close", "volume",
+        'close_time', 'quote_asset_volume', 'trades', 'taker_base_vol',
+        'taker_quote_vol', 'ignore'
+    ])
+
+    df['close'] = df['close'].astype(float)
+
+    df['macd'] = ta.trend.MACD(close=df['close']).macd()
 
     return df
