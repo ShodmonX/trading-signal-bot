@@ -1,6 +1,6 @@
 from ta.trend import EMAIndicator, ADXIndicator, MACD, SMAIndicator
 from ta.momentum import RSIIndicator, StochasticOscillator
-from ta.volatility import BollingerBands
+from ta.volatility import BollingerBands, AverageTrueRange
 import pandas as pd
 
 
@@ -35,6 +35,7 @@ class BaseStrategy:
         self.calculate_indicators()
         self.generate_signals()
         self.decide()
+        self.calculate_stop_loss_and_take_profit()
 
     def get_context(self):
         context = {
@@ -60,6 +61,18 @@ class BaseStrategy:
     
     def get_name(self):
         return self.__class__.__name__
+
+    def calculate_stop_loss_and_take_profit(self):
+        self.df['atr'] = AverageTrueRange(high=self.df['high'], low=self.df['low'], close=self.df['close'], fillna=True).average_true_range()
+        long_idx = self.df['long_signal']
+        self.df.loc[long_idx, 'stop_loss'] = self.df.loc[long_idx, 'close'] - 1.5 * self.df.loc[long_idx, 'atr']
+        self.df.loc[long_idx, 'take_profit'] = self.df.loc[long_idx, 'close'] + 3.0 * self.df.loc[long_idx, 'atr']
+
+        short_idx = self.df['short_signal']
+        self.df.loc[short_idx, 'stop_loss'] = self.df.loc[short_idx, 'close'] + 1.5 * self.df.loc[short_idx, 'atr']
+        self.df.loc[short_idx, 'take_profit'] = self.df.loc[short_idx, 'close'] - 3 * self.df.loc[short_idx, 'atr']
+
+        self.unsupported_keys.append('atr')
 
 
 class TrendFollowStrategy(BaseStrategy):
